@@ -80,6 +80,9 @@ class SqliteTopicRepository(TopicRepository):
         if cursor.rowcount == 0:
             raise EntityNotFoundError(f"Topic {topic_id!r} does not exist")
 
+    def delete_all(self) -> None:
+        self._connection.execute("DELETE FROM topics")
+
     def _replace_modules(self, topic: Topic) -> None:
         self._connection.executemany(
             "INSERT INTO modules (id, topic_id, title, completed, position) VALUES (?, ?, ?, ?, ?)",
@@ -195,6 +198,9 @@ class SqliteProjectRepository(ProjectRepository):
         if cursor.rowcount == 0:
             raise EntityNotFoundError(f"Project {project_id!r} does not exist")
 
+    def delete_all(self) -> None:
+        self._connection.execute("DELETE FROM projects")
+
     def _replace_tasks(self, project: Project) -> None:
         self._connection.executemany(
             "INSERT INTO tasks (id, project_id, title, completed, position) VALUES (?, ?, ?, ?, ?)",
@@ -279,3 +285,6 @@ class SqliteStudyLogRepository(StudyLogRepository):
             )
             for row in rows
         ]
+
+    def delete_all(self) -> None:
+        self._connection.execute("DELETE FROM study_logs")

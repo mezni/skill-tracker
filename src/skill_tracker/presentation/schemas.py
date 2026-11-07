@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from ..application.dto import DashboardSummary
+from ..application.transfer import ImportSummary
 from ..domain.entities import Project, StudyLog, Topic
 
 
@@ -152,6 +153,20 @@ class StudyLogOut(ApiModel):
             hours=float(log.hours),
             date=log.logged_on.isoformat(),
             note=log.note,
+        )
+
+
+class ImportSummaryOut(ApiModel):
+    topics_imported: int
+    projects_imported: int
+    logs_imported: int
+
+    @classmethod
+    def from_summary(cls, summary: ImportSummary) -> ImportSummaryOut:
+        return cls(
+            topics_imported=summary.topics_imported,
+            projects_imported=summary.projects_imported,
+            logs_imported=summary.logs_imported,
         )
 
 

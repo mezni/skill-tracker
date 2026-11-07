@@ -61,7 +61,7 @@ const ICONS = {
 // --- API client ------------------------------------------------------------
 async function api(path, options = {}) {
   const config = { ...options };
-  if (config.body) {
+  if (config.body && !(config.body instanceof FormData)) {
     config.headers = { "Content-Type": "application/json", ...(config.headers || {}) };
   }
   const response = await fetch(path, config);
@@ -110,6 +110,11 @@ const API = {
   toggleTask: (projectId, taskId) =>
     api(`/api/projects/${projectId}/tasks/${taskId}/toggle`, { method: "PATCH" }),
   createLog: (payload) => api("/api/logs", { method: "POST", body: JSON.stringify(payload) }),
+  importFile: (file) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api("/api/import", { method: "POST", body });
+  },
 };
 
 // --- Helpers ---------------------------------------------------------------
@@ -227,6 +232,8 @@ function dashboardView() {
           <div class="pt-2 flex flex-wrap gap-3">
             <button data-action="open-log-modal" class="px-4 py-2 bg-white text-indigo-700 hover:bg-indigo-50 font-semibold rounded-lg text-xs sm:text-sm shadow transition">Log Quick Session</button>
             <button data-action="open-project-modal" class="px-4 py-2 bg-indigo-500/30 hover:bg-indigo-500/40 text-white font-semibold rounded-lg text-xs sm:text-sm backdrop-blur-sm border border-white/20 transition">New Project</button>
+            <button data-action="export" class="px-4 py-2 bg-indigo-500/30 hover:bg-indigo-500/40 text-white font-semibold rounded-lg text-xs sm:text-sm backdrop-blur-sm border border-white/20 transition">Export Excel</button>
+            <button data-action="import" class="px-4 py-2 bg-indigo-500/30 hover:bg-indigo-500/40 text-white font-semibold rounded-lg text-xs sm:text-sm backdrop-blur-sm border border-white/20 transition">Import Excel</button>
           </div>
         </div>
       </section>
@@ -810,14 +817,16 @@ function closeModal() {
   modalRoot.innerHTML = "";
 }
 
-function confirmDialog(message) {
+function confirmDialog(message, confirmLabel = "Delete") {
   return new Promise((resolve) => {
     modalRoot.innerHTML = modalShell(
       "Please confirm",
       `<p class="text-sm text-slate-600 dark:text-slate-300">${esc(message)}</p>
        <div class="flex justify-end space-x-2 pt-2">
          <button data-confirm="no" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
-         <button data-confirm="yes" class="px-4 py-2 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg">Delete</button>
+         <button data-confirm="yes" class="px-4 py-2 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg">${esc(
+           confirmLabel,
+         )}</button>
        </div>`,
     );
     const handler = (event) => {
@@ -829,6 +838,33 @@ function confirmDialog(message) {
     };
     modalRoot.addEventListener("click", handler);
   });
+}
+
+async function pickAndImport() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  input.addEventListener("change", async () => {
+    const [file] = input.files || [];
+    if (!file) return;
+
+    const shouldReplace = await confirmDialog(
+      "Importing replaces all current topics, projects, and logs. Export a backup first if unsure.",
+      "Replace data",
+    );
+    if (!shouldReplace) return;
+
+    try {
+      const summary = await API.importFile(file);
+      await refresh({ silent: true });
+      toast(
+        `Imported ${summary.topicsImported} topics, ${summary.projectsImported} projects, ${summary.logsImported} logs`,
+      );
+    } catch (error) {
+      toast(error.message, "error");
+    }
+  });
+  input.click();
 }
 
 // --- Event handling --------------------------------------------------------
@@ -856,6 +892,12 @@ document.addEventListener("click", async (event) => {
         break;
       case "open-log-modal":
         openLogModal();
+        break;
+      case "export":
+        window.location.assign("/api/export");
+        break;
+      case "import":
+        await pickAndImport();
         break;
       case "close-modal":
         closeModal();

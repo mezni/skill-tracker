@@ -32,6 +32,10 @@ class TopicRepository(ABC):
     def delete(self, topic_id: str) -> None:
         """Delete a topic; modules cascade and references are detached."""
 
+    @abstractmethod
+    def delete_all(self) -> None:
+        """Remove every topic (used by full restore imports)."""
+
 
 class ProjectRepository(ABC):
     @abstractmethod
@@ -54,6 +58,10 @@ class ProjectRepository(ABC):
     def delete(self, project_id: str) -> None:
         """Delete a project; tasks cascade and log references are detached."""
 
+    @abstractmethod
+    def delete_all(self) -> None:
+        """Remove every project (used by full restore imports)."""
+
 
 class StudyLogRepository(ABC):
     @abstractmethod
@@ -63,3 +71,7 @@ class StudyLogRepository(ABC):
     @abstractmethod
     def list(self) -> list[StudyLog]:
         """Return all logs, newest first."""
+
+    @abstractmethod
+    def delete_all(self) -> None:
+        """Remove every log (used by full restore imports)."""

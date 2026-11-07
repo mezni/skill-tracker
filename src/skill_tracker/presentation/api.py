@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
 
 from ..application.dto import ProjectInput, StudyLogInput, TopicInput
 from ..application.services import (
@@ -13,9 +14,11 @@ from ..application.services import (
     StudyLogService,
     TopicService,
 )
+from ..application.transfer import TransferService
 from .schemas import (
     ChecklistItemIn,
     DashboardOut,
+    ImportSummaryOut,
     ProjectIn,
     ProjectOut,
     StudyLogIn,
@@ -43,10 +46,15 @@ def _dashboard_service(request: Request) -> DashboardService:
     return request.app.state.dashboard_service
 
 
+def _transfer_service(request: Request) -> TransferService:
+    return request.app.state.transfer_service
+
+
 TopicServiceDep = Annotated[TopicService, Depends(_topic_service)]
 ProjectServiceDep = Annotated[ProjectService, Depends(_project_service)]
 StudyLogServiceDep = Annotated[StudyLogService, Depends(_log_service)]
 DashboardServiceDep = Annotated[DashboardService, Depends(_dashboard_service)]
+TransferServiceDep = Annotated[TransferService, Depends(_transfer_service)]
 
 
 def _to_topic_input(data: TopicIn) -> TopicInput:
@@ -185,3 +193,32 @@ def create_log(data: StudyLogIn, service: StudyLogServiceDep) -> StudyLogOut:
         )
     )
     return StudyLogOut.from_entity(log)
+
+
+# --- Excel import / export -------------------------------------------------
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@router.get("/export", response_class=Response, tags=["transfer"])
+def export_workbook(service: TransferServiceDep) -> Response:
+    content = service.export()
+    filename = f"skill-tracker-{datetime.now(UTC).date():%Y%m%d}.xlsx"
+    return Response(
+        content=content,
+        media_type=XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post(
+    "/import",
+    response_model=ImportSummaryOut,
+    status_code=status.HTTP_200_OK,
+    tags=["transfer"],
+)
+async def import_workbook(
+    service: TransferServiceDep,
+    file: Annotated[UploadFile, File()],
+) -> ImportSummaryOut:
+    data = await file.read()
+    return ImportSummaryOut.from_summary(service.import_(data))

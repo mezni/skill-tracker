@@ -159,3 +159,51 @@ def test_static_spa_is_served(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert "SkillTrack Studio" in response.text
+
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+def test_export_returns_downloadable_workbook(client: TestClient) -> None:
+    response = client.get("/api/export")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(XLSX)
+    assert "attachment; filename=" in response.headers["content-disposition"]
+    assert response.content.startswith(b"PK")
+
+
+def test_import_restores_exported_workbook(client: TestClient) -> None:
+    topics_before = client.get("/api/topics").json()
+    projects_before = client.get("/api/projects").json()
+    logs_before = client.get("/api/logs").json()
+    exported = client.get("/api/export").content
+
+    client.post("/api/topics", json={"title": "Scratch"})
+    client.post("/api/projects", json={"title": "Throwaway"})
+    assert len(client.get("/api/topics").json()) == len(topics_before) + 1
+
+    response = client.post(
+        "/api/import",
+        files={"file": ("backup.xlsx", exported, XLSX)},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "topicsImported": len(topics_before),
+        "projectsImported": len(projects_before),
+        "logsImported": len(logs_before),
+    }
+    assert [topic["id"] for topic in client.get("/api/topics").json()] == [
+        topic["id"] for topic in topics_before
+    ]
+
+
+def test_import_rejects_invalid_workbook(client: TestClient) -> None:
+    response = client.post(
+        "/api/import",
+        files={"file": ("notes.xlsx", b"definitely not a workbook", XLSX)},
+    )
+
+    assert response.status_code == 400
+    assert "valid .xlsx" in response.json()["detail"]

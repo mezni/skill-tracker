@@ -15,9 +15,11 @@ from ..application.services import (
     StudyLogService,
     TopicService,
 )
+from ..application.transfer import TransferService
 from ..config import database_path, static_dir
 from ..domain.errors import EntityNotFoundError, ValidationError
 from ..infrastructure.database import initialise_database
+from ..infrastructure.excel_codec import OpenpyxlExcelCodec
 from ..infrastructure.seed import seed_if_empty
 from ..infrastructure.sqlite_unit_of_work import SqliteUnitOfWork
 from .api import router as api_router
@@ -42,6 +44,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     app.state.project_service = ProjectService(uow_factory)
     app.state.log_service = StudyLogService(uow_factory)
     app.state.dashboard_service = DashboardService(uow_factory)
+    app.state.transfer_service = TransferService(uow_factory, OpenpyxlExcelCodec())
 
     @app.exception_handler(ValidationError)
     def handle_validation_error(_: Request, exc: ValidationError) -> JSONResponse:

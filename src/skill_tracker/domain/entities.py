@@ -243,7 +243,7 @@ class StudyLog:
             topic_title=require_text(topic_title, "topic title", max_length=300),
             project_id=_clean_optional_id(project_id),
             hours=parsed_hours.value,
-            logged_on=parse_optional_iso_date(logged_on, "date") or date.today(),  # noqa: DTZ011 - study date is local
+            logged_on=parse_optional_iso_date(logged_on, "date") or date.today(),
             note=optional_text(note),
         )
 

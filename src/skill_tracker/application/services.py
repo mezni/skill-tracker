@@ -149,7 +149,7 @@ class StudyLogService:
                 topic_title=topic.title,
                 project_id=project.id if project else None,
                 hours=data.hours,
-                logged_on=data.logged_on or date.today(),  # noqa: DTZ011 - study date is local
+                logged_on=data.logged_on or date.today(),
                 note=data.note,
             )
             uow.logs.add(log)
