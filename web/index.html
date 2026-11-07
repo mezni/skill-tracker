@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SkillTrack Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="font-sans antialiased">
+    <div class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 flex flex-col">
+      <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-500/20">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg sm:text-xl leading-tight bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">SkillTrack Studio</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Personal Learning &amp; Project OS</p>
+          </div>
+        </div>
+
+        <nav id="tabs" class="flex items-center space-x-1 sm:space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <button data-action="tab" data-tab="dashboard" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all">
+            <span class="hidden md:inline">Dashboard</span><span class="md:hidden">Home</span>
+          </button>
+          <button data-action="tab" data-tab="topics" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all">
+            <span class="hidden md:inline">Learning Topics</span><span class="md:hidden">Topics</span>
+          </button>
+          <button data-action="tab" data-tab="projects" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all">
+            <span class="hidden md:inline">Projects</span><span class="md:hidden">Projects</span>
+          </button>
+          <button data-action="tab" data-tab="activity" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all">
+            <span class="hidden md:inline">Activity Logs</span><span class="md:hidden">Logs</span>
+          </button>
+        </nav>
+
+        <div class="flex items-center space-x-2">
+          <button data-action="open-log-modal" class="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm">
+            <span>Log Study</span>
+          </button>
+          <button data-action="theme" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition" title="Toggle theme" aria-label="Toggle color theme">
+            <span id="theme-icon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></span>
+          </button>
+        </div>
+      </header>
+
+      <main id="view" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6"></main>
+
+      <footer class="border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+        Personal Learning &amp; Project Tracking Canvas · Persisted in SQLite via the SkillTracker API
+      </footer>
+    </div>
+
+    <div id="modal-root"></div>
+    <div id="toast-root" class="fixed bottom-4 right-4 z-[60] space-y-2"></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
